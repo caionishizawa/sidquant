@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SidQuant — Calculadora de Risco</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #080b12;
+            --surface: #0f1420;
+            --surface2: #161d2e;
+            --surface3: #1c2540;
+            --border: #1e2a3a;
+            --text: #e2e8f0;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --green: #22c55e;
+            --green-dim: #166534;
+            --green-bg: rgba(34, 197, 94, 0.06);
+            --red: #ef4444;
+            --red-dim: #991b1b;
+            --red-bg: rgba(239, 68, 68, 0.06);
+            --yellow: #eab308;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ─── HEADER ─── */
+        .header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface);
+        }
+
+        .logo-icon {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: 900; color: #fff;
+        }
+
+        .logo-text { font-size: 18px; font-weight: 800; color: #fff; }
+        .logo-sub { font-size: 11px; color: var(--text-muted); margin-left: 4px; }
+
+        /* ─── LAYOUT ─── */
+        .main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 28px 20px;
+        }
+
+        /* ─── INPUT SECTION ─── */
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            transition: border-color 0.2s;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--accent);
+        }
+
+        .input-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .input-row .prefix {
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .input-row input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 600;
+            outline: none;
+            width: 100%;
+        }
+
+        .input-row input::placeholder {
+            color: #2d3f56;
+        }
+
+        .input-row .suffix {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Risk buttons */
+        .risk-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .risk-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .risk-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .risk-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* Direction */
+        .dir-row { display: flex; gap: 8px; }
+
+        .dir-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            background: transparent;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-muted);
+        }
+
+        .dir-btn.long.active {
+            border-color: var(--green);
+            background: var(--green-bg);
+            color: var(--green);
+        }
+
+        .dir-btn.short.active {
+            border-color: var(--red);
+            background: var(--red-bg);
+            color: var(--red);
+        }
+
+        /* ─── RESULTADO PRINCIPAL ─── */
+        .result-hero {
+            margin-top: 28px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .result-hero.show { display: block; animation: slideUp 0.3s ease; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Frase principal */
+        .hero-instruction {
+            padding: 28px 24px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--surface2), var(--surface));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hero-instruction .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .hero-instruction .size-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 42px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .hero-instruction .size-detail {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        /* Cenários: Stop e Take */
+        .scenarios {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .scenario {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .scenario.loss {
+            border-right: 1px solid var(--border);
+            background: var(--red-bg);
+        }
+
+        .scenario.win {
+            background: var(--green-bg);
+        }
+
+        .scenario .sc-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .scenario .sc-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .scenario.loss .sc-label { color: var(--red); }
+        .scenario.win .sc-label { color: var(--green); }
+
+        .scenario .sc-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .scenario .sc-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .scenario.loss .sc-value { color: var(--red); }
+        .scenario.win .sc-value { color: var(--green); }
+
+        .scenario .sc-pct {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .scenario.loss .sc-pct { color: #b91c1c; }
+        .scenario.win .sc-pct { color: #15803d; }
+
+        /* Detalhes extras */
+        .details-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            border-top: 1px solid var(--border);
+        }
+
+        .detail-item {
+            padding: 16px;
+            text-align: center;
+            border-right: 1px solid var(--border);
+        }
+
+        .detail-item:last-child { border-right: none; }
+
+        .detail-item .dt-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .detail-item .dt-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .dt-value.good { color: var(--green); }
+        .dt-value.ok { color: var(--yellow); }
+        .dt-value.bad { color: var(--red); }
+
+        /* ─── PROJEÇÃO ─── */
+        .projection {
+            margin-top: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .projection.show { display: block; animation: slideUp 0.3s ease; }
+
+        .proj-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .proj-header .title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .proj-header .summary {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .proj-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .proj-table th {
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            background: var(--surface2);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .proj-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #141c2c;
+        }
+
+        .proj-table tbody tr:hover {
+            background: rgba(59, 130, 246, 0.03);
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-win { background: rgba(34,197,94,0.1); color: var(--green); }
+        .tag-loss { background: rgba(239,68,68,0.1); color: var(--red); }
+
+        /* ─── FOOTER ─── */
+        .footer {
+            text-align: center;
+            padding: 32px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 640px) {
+            .main { padding: 16px 12px; }
+            .input-grid { grid-template-columns: 1fr; }
+            .hero-instruction .size-value { font-size: 32px; }
+            .scenario .sc-value { font-size: 22px; }
+            .details-bar { grid-template-columns: 1fr 1fr; }
+            .detail-item { border-right: none; border-bottom: 1px solid var(--border); }
+            .detail-item:last-child { border-bottom: none; }
+            .scenarios { grid-template-columns: 1fr; }
+            .scenario.loss { border-right: none; border-bottom: 1px solid var(--border); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo-icon">S</div>
+    <span class="logo-text">SidQuant</span>
+    <span class="logo-sub">Calculadora de Risco</span>
+</div>
+
+<div class="main">
+
+    <!-- INPUTS -->
+    <div class="section-label">Configure seu trade</div>
+
+    <div class="input-grid">
+        <div class="input-group">
+            <label>Banca Total</label>
+            <div class="input-row">
+                <span class="prefix">$</span>
+                <input type="text" id="banca" placeholder="1000" oninput="calc()" inputmode="decimal">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Alavancagem</label>
+            <div class="input-row">
+                <input type="text" id="alav" value="1" style="text-align:center;" oninput="calc()" inputmode="decimal">
+                <span class="suffix">x</span>
+            </div>
+        </div>
+
+        <div class="input-group full">
+            <label>Risco por Trade</label>
+            <div class="risk-row">
+                <button class="risk-btn" onclick="setRisk(0.5)">0.5%</button>
+                <button class="risk-btn active" onclick="setRisk(1)">1%</button>
+                <button class="risk-btn" onclick="setRisk(2)">2%</button>
+                <button class="risk-btn" onclick="setRisk(3)">3%</button>
+                <button class="risk-btn" onclick="setRisk(5)">5%</button>
+                <button class="risk-btn" onclick="setRisk(10)">10%</button>
+            </div>
+        </div>
+
+        <div class="input-group full">
+            <label>Direção</label>
+            <div class="dir-row">
+                <button class="dir-btn long active" onclick="setDir('long')">LONG (Compra)</button>
+                <button class="dir-btn short" onclick="setDir('short')">SHORT (Venda)</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Preço de Entrada</label>
+            <div class="input-row">
+                <span class="prefix">$</span>
+                <input type="text" id="entrada" placeholder="50000" oninput="calc()" inputmode="decimal">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Preço de Stop Loss</label>
+            <div class="input-row">
+                <span class="prefix">$</span>
+                <input type="text" id="stop" placeholder="49000" oninput="calc()" inputmode="decimal">
+            </div>
+        </div>
+
+        <div class="input-group full">
+            <label>Preço de Take Profit (alvo)</label>
+            <div class="input-row">
+                <span class="prefix">$</span>
+                <input type="text" id="take" placeholder="53000" oninput="calc()" inputmode="decimal">
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTADO PRINCIPAL -->
+    <div class="result-hero" id="result-hero">
+
+        <!-- ENTRE COM -->
+        <div class="hero-instruction">
+            <div class="label">Entre no trade com</div>
+            <div class="size-value" id="out-size">$ 2,000.00</div>
+            <div class="size-detail" id="out-qty">0.040000 unidades</div>
+        </div>
+
+        <!-- CENÁRIOS -->
+        <div class="scenarios">
+            <div class="scenario loss">
+                <div class="sc-icon">&#x1F6D1;</div>
+                <div class="sc-label">Se bater o STOP</div>
+                <div class="sc-price" id="out-stop-price">no preço $49,000</div>
+                <div class="sc-value" id="out-loss-val">- $ 10.00</div>
+                <div class="sc-pct" id="out-loss-pct">-1.00% da banca</div>
+            </div>
+            <div class="scenario win">
+                <div class="sc-icon">&#x1F3AF;</div>
+                <div class="sc-label">Se bater o TAKE</div>
+                <div class="sc-price" id="out-take-price">no preço $53,000</div>
+                <div class="sc-value" id="out-win-val">+ $ 60.00</div>
+                <div class="sc-pct" id="out-win-pct">+6.00% da banca</div>
+            </div>
+        </div>
+
+        <!-- DETALHES -->
+        <div class="details-bar">
+            <div class="detail-item">
+                <div class="dt-label">Risco / Retorno</div>
+                <div class="dt-value" id="out-rr">1 : 3.0</div>
+            </div>
+            <div class="detail-item">
+                <div class="dt-label">Margem Usada</div>
+                <div class="dt-value" id="out-margin">$ 2,000</div>
+            </div>
+            <div class="detail-item">
+                <div class="dt-label">% da Banca Usada</div>
+                <div class="dt-value" id="out-margin-pct">20%</div>
+            </div>
+            <div class="detail-item">
+                <div class="dt-label">Alavancagem Mínima</div>
+                <div class="dt-value" id="out-alav-min">2x</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROJEÇÃO -->
+    <div class="projection" id="projection">
+        <div class="proj-header">
+            <span class="title">Projeção: 10 trades (70% acerto)</span>
+            <span class="summary" id="proj-summary" style="color:var(--green)">+$ 0</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="proj-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Resultado</th>
+                        <th>Valor</th>
+                        <th>Banca</th>
+                        <th>Variação</th>
+                    </tr>
+                </thead>
+                <tbody id="proj-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">SidQuant &copy; 2026 — Ecossistema de sinais</div>
+</div>
+
+<script>
+let dir = 'long';
+let riskPct = 1;
+
+function n(id) {
+    return parseFloat(document.getElementById(id).value.replace(/,/g, '')) || 0;
+}
+
+function f(v, d = 2) {
+    return v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
+function setRisk(v) {
+    riskPct = v;
+    document.querySelectorAll('.risk-btn').forEach(b =>
+        b.classList.toggle('active', parseFloat(b.textContent) === v)
+    );
+    calc();
+}
+
+function setDir(d) {
+    dir = d;
+    document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.dir-btn.${d}`).classList.add('active');
+    calc();
+}
+
+function calc() {
+    const banca = n('banca');
+    const entrada = n('entrada');
+    const stop = n('stop');
+    const take = n('take');
+    const alav = n('alav') || 1;
+
+    const hero = document.getElementById('result-hero');
+    const proj = document.getElementById('projection');
+
+    if (!banca || !entrada || !stop) {
+        hero.classList.remove('show');
+        proj.classList.remove('show');
+        return;
+    }
+
+    // Distâncias
+    let stopDist, takeDist;
+    if (dir === 'long') {
+        stopDist = (entrada - stop) / entrada;
+        takeDist = take ? (take - entrada) / entrada : 0;
+    } else {
+        stopDist = (stop - entrada) / entrada;
+        takeDist = take ? (entrada - take) / entrada : 0;
+    }
+
+    if (stopDist <= 0) {
+        hero.classList.remove('show');
+        proj.classList.remove('show');
+        return;
+    }
+
+    // Cálculos
+    const riscoValor = banca * (riskPct / 100);
+    const posSize = riscoValor / stopDist;   // tamanho da posição
+    const margem = posSize / alav;            // margem com alavancagem
+    const qty = posSize / entrada;
+    const perda = riscoValor;
+    const lucro = take ? posSize * takeDist : 0;
+    const rr = takeDist > 0 ? takeDist / stopDist : 0;
+
+    // ─── MOSTRAR RESULTADO ───
+    hero.classList.add('show');
+
+    document.getElementById('out-size').textContent = '$ ' + f(posSize);
+    document.getElementById('out-qty').textContent = f(qty, 6) + ' unidades';
+
+    // Stop
+    document.getElementById('out-stop-price').textContent = 'no preço $ ' + f(stop);
+    document.getElementById('out-loss-val').textContent = '- $ ' + f(perda);
+    document.getElementById('out-loss-pct').textContent = '-' + f(riskPct) + '% da banca';
+
+    // Take
+    if (take && takeDist > 0) {
+        document.getElementById('out-take-price').textContent = 'no preço $ ' + f(take);
+        document.getElementById('out-win-val').textContent = '+ $ ' + f(lucro);
+        document.getElementById('out-win-pct').textContent = '+' + f((lucro / banca) * 100) + '% da banca';
+    } else {
+        document.getElementById('out-take-price').textContent = 'preencha o take';
+        document.getElementById('out-win-val').textContent = '—';
+        document.getElementById('out-win-pct').textContent = '';
+    }
+
+    // RR
+    const rrEl = document.getElementById('out-rr');
+    if (rr > 0) {
+        rrEl.textContent = '1 : ' + f(rr, 1);
+        rrEl.className = 'dt-value ' + (rr >= 2 ? 'good' : rr >= 1 ? 'ok' : 'bad');
+    } else {
+        rrEl.textContent = '—';
+        rrEl.className = 'dt-value';
+    }
+
+    // Margem
+    document.getElementById('out-margin').textContent = '$ ' + f(margem);
+    const margPct = (margem / banca) * 100;
+    const margEl = document.getElementById('out-margin-pct');
+    margEl.textContent = f(margPct, 1) + '%';
+    margEl.className = 'dt-value ' + (margPct <= 30 ? 'good' : margPct <= 60 ? 'ok' : 'bad');
+
+    // Alavancagem mínima necessária pra esse size
+    const alavMin = posSize / banca;
+    const alavMinEl = document.getElementById('out-alav-min');
+    if (alavMin <= 1) {
+        alavMinEl.textContent = '1x (sem alav.)';
+        alavMinEl.className = 'dt-value good';
+    } else {
+        alavMinEl.textContent = f(Math.ceil(alavMin), 0) + 'x';
+        alavMinEl.className = 'dt-value ' + (alavMin <= 5 ? 'ok' : 'bad');
+    }
+
+    // ─── PROJEÇÃO ───
+    if (rr > 0) {
+        proj.classList.add('show');
+        buildProjection(banca, rr);
+    } else {
+        proj.classList.remove('show');
+    }
+}
+
+function buildProjection(banca, rr) {
+    const body = document.getElementById('proj-body');
+    body.innerHTML = '';
+
+    const pattern = [1, 1, 0, 1, 1, 0, 1, 0, 1, 1]; // 7W 3L
+    let b = banca;
+
+    for (let i = 0; i < 10; i++) {
+        const win = pattern[i];
+        const risk = b * (riskPct / 100);
+        const gain = risk * rr;
+        const pl = win ? gain : -risk;
+        b += pl;
+        const diff = ((b - banca) / banca) * 100;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="color:var(--text-muted)">${i + 1}</td>
+            <td><span class="tag ${win ? 'tag-win' : 'tag-loss'}">${win ? 'WIN' : 'LOSS'}</span></td>
+            <td style="color:var(${win ? '--green' : '--red'})">${win ? '+' : '-'} $ ${f(Math.abs(pl))}</td>
+            <td style="color:#fff;font-weight:600">$ ${f(b)}</td>
+            <td style="color:var(${diff >= 0 ? '--green' : '--red'})">${diff >= 0 ? '+' : ''}${f(diff)}%</td>
+        `;
+        body.appendChild(tr);
+    }
+
+    const total = b - banca;
+    const sumEl = document.getElementById('proj-summary');
+    sumEl.textContent = (total >= 0 ? '+' : '') + '$ ' + f(total);
+    sumEl.style.color = total >= 0 ? 'var(--green)' : 'var(--red)';
+}
+</script>
+
+</body>
+</html>
